@@ -1,8 +1,21 @@
 #version 300 es
 precision highp float;
 out vec4 o_color;
+uniform int frameW;
+uniform int frameH;
+uniform int time;
+uniform CameraBlock
+{
+    vec3 loc;
+    vec3 dir;
+    mat4 view;
+} camera;
 
-float distance_from_sphere(in vec3 p, in vec3 c, float r)
+float dot2( in vec2 v ) { return dot(v,v); }
+float dot2( in vec3 v ) { return dot(v,v); }
+float ndot( in vec2 a, in vec2 b ) { return a.x*b.x - a.y*b.y; }
+
+float sphere(in vec3 p, in vec3 c, float r)
 {
     return length(p - c) - r;
 }
@@ -17,7 +30,7 @@ float distance_from_sphere(in vec3 p, in vec3 c, float r)
 float map_the_world(in vec3 p)
 {
     float displacement = sin(5.0 * p.x) * sin(5.0 * p.y) * sin(5.0 * p.z) * 0.25;
-    float sphere_0 = distance_from_sphere(p, vec3(0.0), 1.0);
+    float sphere_0 = sphere(p, vec3(0.0), 1.0);
 
     return sphere_0 + displacement;
 }
@@ -70,14 +83,13 @@ vec3 ray_march(in vec3 ro, in vec3 rd)
 
 void main()
 {
-    // vec2 uv = vUV.st * 2.0 - 1.0;
-    vec2 uv = vec2(-1.0, -1.0) + 2.0 * gl_FragCoord.xy / 500.0;
+    float coeff = float(frameW > frameH ? frameH : frameW);
+    vec2 uv = vec2(-1.0, -1.0) + 2.0 * gl_FragCoord.xy / coeff;
 
-    vec3 camera_position = vec3(0.0, 0.0, -5.0);
-    vec3 ro = camera_position;
-    vec3 rd = vec3(uv, 1.0);
+    vec3 ray_origin = camera.loc;
+    vec3 ray_dir = vec3(camera.view * vec4(uv, 1.0, 1.0));
 
-    vec3 shaded_color = ray_march(ro, rd);
+    vec3 shaded_color = ray_march(ray_origin, ray_dir);
 
     o_color = vec4(shaded_color, 1.0);
 }

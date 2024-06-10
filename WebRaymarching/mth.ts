@@ -7,7 +7,7 @@ export class S {
     }
     get s() {
         if (isNaN(+this._s)) return this._s
-        else return (+this._s).toFixed(1)
+        else return (+this._s).toFixed(3)
     }
     set s(newS) {
         this._s = newS

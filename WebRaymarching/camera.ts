@@ -74,11 +74,9 @@ export class Camera {
         return this
     }
     setDef() {
-        this.loc = new vec3(0, 0, 1)
+        this.loc = new vec3(-5, 0, -5)
         this.at = new vec3(0, 0, 0)
-        this.dir = new vec3(0, 0, -1)
         this.up = new vec3(0, 1, 0)
-        this.right = new vec3(1, 0, 0)
 
         this.projDist = 0.1
         this.projSize = 0.1

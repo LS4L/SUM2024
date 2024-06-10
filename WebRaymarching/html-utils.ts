@@ -199,10 +199,10 @@ export function appendTransform(transform: Transformations, parent: HTMLDivEleme
     }
     parent.append(hideButton)
 
-    appendVec('position', transform.position, transformDiv)
-    appendVec('rotation', transform.rotation, transformDiv)
-    appendNumber('scale', transform.scale, transformDiv, (newVal) => {
-        transform.scale = newVal
+    appendSVec('position', transform.position, transformDiv)
+    appendSVec('rotation', transform.rotation, transformDiv)
+    appendTextEditor('scale', transform.scale, transformDiv, (newVal) => {
+        transform.scale.s = newVal
         compileShader()
     })
 

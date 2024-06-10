@@ -1,12 +1,13 @@
 import { compileShader } from './anim'
+import { cam } from './controls'
 import { Id, appendNumber, appendSVec, appendShapeDiv, appendShapes, appendTextEditor, appendTransform, appendVec } from './html-utils'
 import { saveEvent } from './main'
 import { S, isS, isSVec, matr4, vec3, svec3, isVec } from './mth'
 
 export interface Transformations {
-    position: vec3
-    rotation: vec3
-    scale: number
+    position: svec3
+    rotation: svec3
+    scale: S
 }
 function isTransform<T>(v: T) {
     return (
@@ -93,7 +94,7 @@ export interface ChangeEvent {
     parent: Two // will be removed
     child: Shape // will be renamed to shape
 }
-const defaultTransform = { position: new vec3(), rotation: new vec3(), scale: 1 }
+const defaultTransform: Transformations = { position: new svec3(), rotation: new svec3(), scale: new S(1) }
 export type Shape = Sphere | Box | Torus | InfCylinder | Cone | Plane | Triangle | Two | Custom
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -140,6 +141,12 @@ function getRoot(): Two {
 }
 const root: Two = { kind: 'Union', shapes: new Map(), smoothness: new S(0), transform: defaultTransform, id: 'shapes' }
 const content: Shape = getRoot()
+
+const savedSceneString = window.localStorage.getItem('camera')
+if (savedSceneString) {
+    const camInfo = JSON.parse(savedSceneString, reviver)
+    cam.camSet(camInfo.loc, camInfo.at, camInfo.up, cam.pos, cam.userLoc)
+}
 
 export const shapeTypes = [
     'Sphere',
@@ -274,17 +281,22 @@ function generateWorldMapRec<T extends Shape>(shape: T | null = content as T, tr
 
     if (!isTwo(shape))
         result +=
-            'vec3(p*' +
-            matr4
-                .rotateX(transform.rotation.x)
-                .mul(matr4.rotateY(transform.rotation.y))
-                .mul(matr4.rotateZ(transform.rotation.z))
-                .mul(matr4.translate(transform.position))
-                .inverse()
-                .str3x4() +
-            ')/' +
-            transform.scale.toFixed(5) +
-            ','
+            /*`
+vec3(
+    inverse(
+        MatrRotateXYZ(
+            D2R(${transform.rotation.x}),
+            D2R(${transform.rotation.y}),
+            D2R(${transform.rotation.z})) * 
+        MatrTranslate(${transform.position.str()})
+        )
+    )*/
+            `
+            vec3(inverse(MatrRotateTranslate(
+                D2R(${transform.rotation.x}),D2R(${transform.rotation.y}),D2R(${transform.rotation.z}),
+                ${transform.position.x},${transform.position.y},${transform.position.z}
+            )) * vec4(p,0))/${transform.scale.s},
+            `
 
     let key: keyof T
 
@@ -351,7 +363,7 @@ function generateWorldMapRec<T extends Shape>(shape: T | null = content as T, tr
         if (added) result += ','
     }
     result = result.substring(0, result.length - 1) // remove trailing comma
-    result += ')*' + transform.scale.toFixed(5)
+    result += ')*' + transform.scale
     console.log('added shape', result)
     return result
 }
@@ -369,4 +381,5 @@ export function initShapes() {
 export function saveScene() {
     //alert(JSON.stringify(root, replacer))
     window.localStorage.setItem('root', JSON.stringify(content, replacer)) // first element in root
+    window.localStorage.setItem('camera', JSON.stringify(cam, replacer))
 }

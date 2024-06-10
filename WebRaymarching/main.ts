@@ -115,6 +115,7 @@ window.addEventListener('keydown', controls.handleKeyDown)
 function KeyPress(e: KeyboardEvent) {
     if (e.keyCode == 90 && e.ctrlKey && e.shiftKey) Redo()
     else if (e.keyCode == 90 && e.ctrlKey) Undo()
+    else if (e.key == 'r' && e.ctrlKey) controls.cam.setDef()
     //else if (e.key == 'W') saveScene()
 }
 

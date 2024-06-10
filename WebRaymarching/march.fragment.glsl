@@ -69,11 +69,50 @@ float Intersection(float d1, float d2, float k)
     float h = clamp(0.5 - 0.5 * (d2 - d1) / k, 0.0, 1.0);
     return mix(d2, d1, h) + k*h * (1.0 - h);
 }
+
+#define MATR_IDENTITY mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+#define pi 3.141592653589793238462643383279
+#define D2R(X)X / 180.0 * pi
+#define R2D(X)X * 180.0 / pi
+
+// Rotate by xyz vectors(radian), then translate by abc
+mat4 MatrRotateTranslate(float x, float y, float z, float a, float b, float c)
+{
+    float cosx = cos(x);
+    float cosy = cos(y);
+    float cosz = cos(z);
+    
+    float sinx = sin(x);
+    float siny = sin(y);
+    float sinz = sin(z);
+    
+    float A11 = cosy * cosz;
+    float A12 = sinx * siny * cosz - cosx * sinz;
+    float A13 = cosx * siny * cosz + sinx * sinz;
+    float A14 = A11 * a + A12 * b + A13 * c;
+    
+    float A21 = cosy * sinz;
+    float A22 = sinx * siny * sinz + cosx * cosz;
+    float A23 = cosx * siny * sinz - sinx * cosz;
+    float A24 = A21 * a + A22 * b + A23 * c;
+    
+    float A31 = -siny;
+    float A32 = sinx * cosy;
+    float A33 = cosx * cosy;
+    float A34 = A31 * a + A32 * b + A33 * c ;
+    
+    return mat4(
+        A11, A12, A13, A14,
+        A21, A22, A23, A24,
+        A31, A32, A33, A34,
+        0, 0, 0, 1
+    );
+}
+
 float map_the_world(in vec3 p)
 {
     return WORLD_MAP;
 }
-
 vec3 calculate_normal(in vec3 p)
 {
     const vec3 small_step = vec3(0.001, 0.0, 0.0);
